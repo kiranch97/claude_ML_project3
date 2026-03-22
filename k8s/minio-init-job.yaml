@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-init
+  namespace: mlflow
+  labels:
+    app: minio-init
+    project: claude-ml-project3
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: mc
+        image: minio/mc:latest
+        command:
+        - sh
+        - -c
+        - |
+          # Wait for MinIO to be ready
+          sleep 10
+          # Configure mc client
+          mc alias set myminio http://minio:9000 minioadmin minioadmin
+          # Create the mlflow-artifacts bucket
+          mc mb myminio/mlflow-artifacts --ignore-existing
+          # Set public policy for mlflow access
+          mc anonymous set download myminio/mlflow-artifacts
+          echo "MinIO bucket mlflow-artifacts created successfully!"
